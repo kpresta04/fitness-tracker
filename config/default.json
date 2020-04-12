@@ -1,0 +1,3 @@
+{
+	"mongoURI": "process.env.MONGODB_URI || mongodb://localhost/workouts"
+}
