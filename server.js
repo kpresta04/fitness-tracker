@@ -16,7 +16,8 @@ app.use(express.json());
 
 app.use(express.static("public"));
 const databaseUrl =
-	"mongodb+srv://dbUser:11223344@cluster0-l36fj.mongodb.net/test?retryWrites=true&w=majority";
+	"mongodb://dbUser:11223344A@ds011963.mlab.com:11963/heroku_hgsgk4nv";
+// "mongodb+srv://dbUser:11223344@cluster0-l36fj.mongodb.net/test?retryWrites=true&w=majority";
 
 MongoClient.connect(databaseUrl, {
 	useNewUrlParser: true,
