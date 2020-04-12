@@ -25,7 +25,7 @@ MongoClient.connect(databaseUrl, {
 	useUnifiedTopology: true,
 })
 	.then((client) => {
-		const db = client.db("fitness-tracker");
+		const db = client.db("heroku_hgsgk4nv");
 		const workoutCollection = db.collection("workouts");
 
 		const seed = async () => {
