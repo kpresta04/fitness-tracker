@@ -15,14 +15,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use(express.static("public"));
-const databaseUrl = process.env.MONGODB_URI || "mongodb://localhost/workouts";
+const databaseUrl =
+	"mongodb+srv://dbUser:11223344@cluster0-l36fj.mongodb.net/test?retryWrites=true&w=majority";
 
 MongoClient.connect(databaseUrl, {
+	useNewUrlParser: true,
+	useFindAndModify: false,
 	useUnifiedTopology: true,
 })
 	.then((client) => {
-		const db = client.db("workouts");
-		const workoutCollection = db.collection("Workout");
+		const db = client.db("fitness-tracker");
+		const workoutCollection = db.collection("workouts");
 
 		const seed = async () => {
 			try {
@@ -73,9 +76,11 @@ MongoClient.connect(databaseUrl, {
 					_id: mongojs.ObjectId(req.params.id),
 				},
 				{
-					exercises: {
-						$push: {
-							...newExercise,
+					$set: {
+						exercises: {
+							$push: {
+								...newExercise,
+							},
 						},
 					},
 				},

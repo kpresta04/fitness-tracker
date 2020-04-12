@@ -1,3 +1,3 @@
 {
-	"mongoURI": "process.env.MONGODB_URI || mongodb://localhost/workouts"
+	"mongoURI": "mongodb+srv://dbUser:11223344@cluster0-l36fj.mongodb.net/test?retryWrites=true&w=majority"
 }

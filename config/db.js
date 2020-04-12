@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
 const config = require("config");
-const databaseUrl = process.env.MONGODB_URI || "mongodb://localhost/workouts";
+// const databaseUrl = process.env.MONGODB_URI || "mongodb://localhost/workouts";
 
-// const db = config.get("mongoURI");
+const db = config.get("mongoURI");
 
 const connectDB = async () => {
 	try {
-		await mongoose.connect(databaseUrl, {
+		await mongoose.connect(db, {
 			useNewUrlParser: true,
 			useFindAndModify: false,
 			useUnifiedTopology: true,
