@@ -6,7 +6,11 @@ const databaseUrl = process.env.MONGODB_URI || "mongodb://localhost/workouts";
 
 const connectDB = async () => {
 	try {
-		await mongoose.connect(databaseUrl, { useNewUrlParser: true });
+		await mongoose.connect(databaseUrl, {
+			useNewUrlParser: true,
+			useFindAndModify: false,
+			useUnifiedTopology: true,
+		});
 		console.log("MongoDB connected");
 	} catch (error) {
 		console.log(error.mongoose);

@@ -1,36 +1,111 @@
 const express = require("express");
-const mongojs = require("mongojs");
-const mongoose = require("mongoose");
+const MongoClient = require("mongodb").MongoClient;
 const Workout = require("./models/Workout");
 const workoutSeed = require("./seeders/seed");
-const connectDB = require("./config/db");
+// const connectDB = require("./config/db");
 const logger = require("morgan");
 const path = require("path");
+const mongojs = require("mongojs");
 
 const app = express();
 
-connectDB();
 app.use(logger("dev"));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use(express.static("public"));
+const databaseUrl = process.env.MONGODB_URI || "mongodb://localhost/workouts";
 
-const seed = async () => {
-	try {
-		await Workout.deleteMany({});
+MongoClient.connect(databaseUrl, {
+	useUnifiedTopology: true,
+})
+	.then((client) => {
+		const db = client.db("workouts");
+		const workoutCollection = db.collection("Workout");
 
-		// await Workout.insertMany(workoutSeed);
-		const documents = await Workout.find({});
-		console.log(documents);
-	} catch (error) {
-		console.log(error);
-		process.exit(1);
-	}
-};
+		const seed = async () => {
+			try {
+				await workoutCollection.deleteMany({});
 
-seed();
+				await workoutCollection.insertMany(workoutSeed);
+			} catch (error) {
+				console.log(error);
+				process.exit(1);
+			}
+		};
+		seed();
+		app.get("/api/workouts", (req, res) => {
+			workoutCollection.find().toArray(function (error, documents) {
+				if (error) throw error;
+
+				res.json(documents);
+			});
+		});
+
+		app.delete("/api/clearall", (req, res) => {
+			workoutCollection.deleteMany({}, (error, response) => {
+				if (error) {
+					res.send(error);
+				} else {
+					res.send(response);
+				}
+			});
+		});
+		app.delete("/api/delete/:id", (req, res) => {
+			workoutCollection.deleteOne(
+				{
+					_id: mongojs.ObjectID(req.params.id),
+				},
+				(error, data) => {
+					if (error) {
+						res.send(error);
+					} else {
+						res.send(data);
+					}
+				}
+			);
+		});
+		app.put("/api/workouts/:id", (req, res) => {
+			const newExercise = req.body;
+			workoutCollection.update(
+				{
+					_id: mongojs.ObjectId(req.params.id),
+				},
+				{
+					exercises: {
+						$push: {
+							...newExercise,
+						},
+					},
+				},
+				(error, data) => {
+					if (error) {
+						res.send(error);
+						console.log(newExercise);
+					} else {
+						console.log(newExercise);
+
+						res.json(data);
+					}
+				}
+			);
+		});
+		app.post("/api/workouts", (req, res) => {
+			workoutCollection.insert(req.body, (error, data) => {
+				if (error) {
+					res.send(error);
+				} else {
+					res.send(data);
+				}
+			});
+		});
+	})
+	.catch((err) => {
+		console.log(err);
+	});
+
+// seed();
 
 app.get("/", (req, res) => {
 	res.sendFile(path.join(__dirname + "/public/index.html"));
@@ -42,93 +117,30 @@ app.get("/stats", (req, res) => {
 	res.sendFile(path.join(__dirname + "/public/stats.html"));
 });
 
-app.get("/api/workouts", (req, res) => {
-	res.json(Workout.find({}));
-});
+// app.get("/all", (req, res) => {
+// 	db.notes.find({}, (error, data) => {
+// 		if (error) {
+// 			res.send(error);
+// 		} else {
+// 			res.json(data);
+// 		}
+// 	});
+// });
 
-app.post("/submit", (req, res) => {
-	console.log(req.body);
-
-	db.notes.insert(req.body, (error, data) => {
-		if (error) {
-			res.send(error);
-		} else {
-			res.send(data);
-		}
-	});
-});
-
-app.get("/all", (req, res) => {
-	db.notes.find({}, (error, data) => {
-		if (error) {
-			res.send(error);
-		} else {
-			res.json(data);
-		}
-	});
-});
-
-app.get("/find/:id", (req, res) => {
-	db.notes.findOne(
-		{
-			_id: mongojs.ObjectId(req.params.id),
-		},
-		(error, data) => {
-			if (error) {
-				res.send(error);
-			} else {
-				res.send(data);
-			}
-		}
-	);
-});
-
-app.post("/update/:id", (req, res) => {
-	db.notes.update(
-		{
-			_id: mongojs.ObjectId(req.params.id),
-		},
-		{
-			$set: {
-				title: req.body.title,
-				note: req.body.note,
-				modified: Date.now(),
-			},
-		},
-		(error, data) => {
-			if (error) {
-				res.send(error);
-			} else {
-				res.send(data);
-			}
-		}
-	);
-});
-
-app.delete("/delete/:id", (req, res) => {
-	db.notes.remove(
-		{
-			_id: mongojs.ObjectID(req.params.id),
-		},
-		(error, data) => {
-			if (error) {
-				res.send(error);
-			} else {
-				res.send(data);
-			}
-		}
-	);
-});
-
-app.delete("/clearall", (req, res) => {
-	db.notes.remove({}, (error, response) => {
-		if (error) {
-			res.send(error);
-		} else {
-			res.send(response);
-		}
-	});
-});
+// app.get("/find/:id", (req, res) => {
+// 	db.notes.findOne(
+// 		{
+// 			_id: mongojs.ObjectId(req.params.id),
+// 		},
+// 		(error, data) => {
+// 			if (error) {
+// 				res.send(error);
+// 			} else {
+// 				res.send(data);
+// 			}
+// 		}
+// 	);
+// });
 
 app.listen(3000 || process.env.PORT, () => {
 	console.log("App running on port 3000!");
